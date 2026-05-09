@@ -18,7 +18,7 @@ provides both, in under 150 lines, with no install step.
 Clone the repo or vendor `core.sh` and `object.sh` into your project:
 
 ```bash
-git clone https://github.com/<you>/bashstuff.git
+git clone https://github.com/wallach-game/bashstuff.git
 ```
 
 Requirements: `bash` 4+, `curl`, `flock`.
@@ -41,6 +41,36 @@ obj_del user 123
 ```
 
 A runnable end-to-end demo lives in [`example.sh`](./example.sh).
+
+## Testing
+
+Clone the repo and run the bundled demo:
+
+```bash
+git clone https://github.com/wallach-game/bashstuff.git
+cd bashstuff
+bash example.sh
+```
+
+Expected output:
+
+```
+user 123 exists? yes
+user 999 exists? no
+user 123 -> {"name":"alice","email":"alice@example.com"}
+user 456 -> {"name":"bob","email":"bob@example.com"}
+[locked write] mutating user 123
+after delete, user 456 exists? no
+runtime dir: /dev/shm/example_<epoch>_<pid>
+...
+```
+
+Set `DEBUG=1` to keep the runtime directory after the script exits and inspect
+the files:
+
+```bash
+DEBUG=1 bash example.sh
+```
 
 ## How it works
 
