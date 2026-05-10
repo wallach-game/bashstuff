@@ -14,6 +14,7 @@ INSTANCE_ID="test_methods_$$_$RANDOM"
 source "$REPO/core.sh"
 require "object"  "file://$REPO/object.sh"
 require "methods" "file://$REPO/methods.sh"
+require "args"    "file://$REPO/args.sh"
 # shellcheck source=examples/user.sh
 source "$REPO/examples/user.sh"
 
@@ -32,7 +33,13 @@ assert_eq "METHODS_LOADED still 1 after re-source" "1" "$METHODS_LOADED"
 printf '\nmethods.sh: obj_call dispatch\n'
 
 user_create alice "Alice" "alice@example.com"
-assert_true "object created via constructor" obj_exists user alice
+assert_true "object created via constructor (positional)" obj_exists user alice
+
+# Same constructor, --flag form (powered by args.sh)
+user_create --id bob --name "Bob" --email "bob@example.com"
+assert_true "object created via constructor (--flag form)" obj_exists user bob
+assert_eq "user/bob name set via --flag form" "Bob" "$(obj_call user bob name)"
+obj_del user bob
 
 assert_eq "obj_call user/alice greet"  "Hello, Alice!"        "$(obj_call user alice greet)"
 assert_eq "obj_call user/alice email"  "alice@example.com"    "$(obj_call user alice email)"

@@ -145,6 +145,44 @@ would block them.
 
 A complete demo lives in [`examples/methods_demo.sh`](./examples/methods_demo.sh).
 
+## Named arguments (`args.sh`)
+
+`args.sh` adds keyword arguments + defaults + required-checks to plain Bash
+functions. Bash itself has no way for a function to inject locals into its
+caller, so the helper emits shell code that the caller `eval`s — the
+established trick:
+
+```bash
+greet() {
+  eval "$(args name greeting=hello -- "$@")"
+  echo "$greeting, $name"
+}
+
+greet alice                            # name=alice  greeting=hello
+greet alice hi                         # name=alice  greeting=hi
+greet --name alice --greeting hi       # named form
+greet --greeting=hi alice              # mixed; positional fills next slot
+```
+
+Spec syntax:
+
+| Form | Meaning |
+| --- | --- |
+| `name` | required parameter |
+| `name=default` | optional, with the given default |
+
+Invalid input (missing required, unknown `--flag`, `--flag` without a value,
+too many positionals, missing `--` separator) emits a clear stderr message
+and `return 2`s out of the caller — the function aborts cleanly without
+leaving half-initialized locals.
+
+`examples/user.sh`'s `user_create` uses `args`, so both forms work:
+
+```bash
+user_create alice "Alice" "alice@x.com"
+user_create --id alice --name Alice --email alice@x.com
+```
+
 ## Design rules
 
 * Modules define functions only — no work on load.

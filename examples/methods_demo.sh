@@ -12,15 +12,16 @@ source "$REPO/core.sh"
 
 require "object"  "file://$REPO/object.sh"
 require "methods" "file://$REPO/methods.sh"
+require "args"    "file://$REPO/args.sh"
 
 # Load the sample type. (Types aren't required modules — they're just .sh
 # files that happen to follow the <type>_<method> naming convention.)
 # shellcheck source=user.sh
 source "$HERE/user.sh"
 
-# --- construct -------------------------------------------------------------
+# --- construct (positional and --flag forms both work, courtesy of args) ---
 user_create alice "Alice"   "alice@example.com"
-user_create bob   "Bob"     "bob@example.com"
+user_create --id bob --name "Bob" --email "bob@example.com"
 
 # --- dispatch through obj_call --------------------------------------------
 echo "obj_call user alice greet  -> $(obj_call user alice greet)"

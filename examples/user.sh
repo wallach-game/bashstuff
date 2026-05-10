@@ -8,6 +8,9 @@
 # Payload format is intentionally simple key=value lines (no jq / JSON), so
 # this file is self-contained and works on any standard Linux box.
 
+# Depends on object.sh (obj_put / obj_get) and optionally args.sh for named
+# arguments. Bootstrap order is shown in methods_demo.sh.
+
 [[ -n "${USER_TYPE_LOADED:-}" ]] && return 0
 USER_TYPE_LOADED=1
 
@@ -30,9 +33,13 @@ email=$email"
 # --- public API -------------------------------------------------------------
 
 # Constructor — call directly, NOT through obj_call (no object exists yet).
-# user_create <id> <name> [email]
+# Demonstrates the args helper: positional and --flag forms both work.
+#
+#   user_create alice "Alice" "alice@x.com"
+#   user_create --id alice --name Alice --email alice@x.com
+#   user_create alice --email alice@x.com --name Alice
 user_create() {
-  local id=$1 name=$2 email=${3:-}
+  eval "$(args id name email= -- "$@")"
   _user_write "$id" "$name" "$email"
 }
 
