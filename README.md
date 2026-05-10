@@ -109,6 +109,80 @@ files. The API is small on purpose:
 | `obj_exists <type> <id>` | exit 0 if present |
 | `obj_lock <type> <id> <cmd…>` | run `<cmd>` under `flock` |
 
+## Methods on objects
+
+`methods.sh` adds a tiny dispatcher so objects can have functions, without
+giving up the function-only-on-load discipline.
+
+The convention is dead simple — a method `m` on type `t` is just a Bash
+function named `t_m`, and the first argument is always the object id:
+
+```bash
+require "object"  "file://$PWD/object.sh"
+require "methods" "file://$PWD/methods.sh"
+source ./examples/user.sh
+
+user_create alice "Alice" "alice@example.com"
+
+obj_call user alice greet            # Hello, Alice!
+obj_call user alice set_email new@x  # mutate via dispatch
+obj_call user alice describe         # multi-line summary
+
+obj_methods user                     # list every method on this type
+obj_method_exists user greet && echo yep
+```
+
+| Function | Purpose |
+| --- | --- |
+| `obj_call <type> <id> <method> [args…]` | look up `<type>_<method>` and call it with the id + args |
+| `obj_method_exists <type> <method>` | exit 0 if the dispatcher would resolve it |
+| `obj_methods <type>` | print every defined method on this type |
+
+`obj_call` refuses to dispatch to a missing object or an unknown method, and
+prints a clear error to stderr in both cases.  Constructors (`<type>_create`,
+…) are called *directly* — they create the object, so the existence check
+would block them.
+
+A complete demo lives in [`examples/methods_demo.sh`](./examples/methods_demo.sh).
+
+## Named arguments (`args.sh`)
+
+`args.sh` adds keyword arguments + defaults + required-checks to plain Bash
+functions. Bash itself has no way for a function to inject locals into its
+caller, so the helper emits shell code that the caller `eval`s — the
+established trick:
+
+```bash
+greet() {
+  eval "$(args name greeting=hello -- "$@")"
+  echo "$greeting, $name"
+}
+
+greet alice                            # name=alice  greeting=hello
+greet alice hi                         # name=alice  greeting=hi
+greet --name alice --greeting hi       # named form
+greet --greeting=hi alice              # mixed; positional fills next slot
+```
+
+Spec syntax:
+
+| Form | Meaning |
+| --- | --- |
+| `name` | required parameter |
+| `name=default` | optional, with the given default |
+
+Invalid input (missing required, unknown `--flag`, `--flag` without a value,
+too many positionals, missing `--` separator) emits a clear stderr message
+and `return 2`s out of the caller — the function aborts cleanly without
+leaving half-initialized locals.
+
+`examples/user.sh`'s `user_create` uses `args`, so both forms work:
+
+```bash
+user_create alice "Alice" "alice@x.com"
+user_create --id alice --name Alice --email alice@x.com
+```
+
 ## Design rules
 
 * Modules define functions only — no work on load.
