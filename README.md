@@ -44,25 +44,21 @@ A runnable end-to-end demo lives in [`example.sh`](./example.sh).
 
 ## Testing
 
-Clone the repo and run the bundled demo:
+The repo ships a small bash test suite under [`test/`](./test/). Run it with:
 
 ```bash
-git clone https://github.com/wallach-game/bashstuff.git
-cd bashstuff
+bash test/run.sh
+```
+
+Each `test_*.sh` file uses the assertion helpers in `test/lib.sh` and exits
+non-zero on failure. The runner aggregates results and the same script is what
+GitHub Actions runs on every pull request — see
+[`.github/workflows/test.yml`](./.github/workflows/test.yml).
+
+You can also run the end-to-end demo directly:
+
+```bash
 bash example.sh
-```
-
-Expected output:
-
-```
-user 123 exists? yes
-user 999 exists? no
-user 123 -> {"name":"alice","email":"alice@example.com"}
-user 456 -> {"name":"bob","email":"bob@example.com"}
-[locked write] mutating user 123
-after delete, user 456 exists? no
-runtime dir: /dev/shm/example_<epoch>_<pid>
-...
 ```
 
 Set `DEBUG=1` to keep the runtime directory after the script exits and inspect

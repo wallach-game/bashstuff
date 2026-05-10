@@ -1,0 +1,33 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    name: bash test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show environment
+        run: |
+          bash --version
+          curl --version | head -n1
+          flock --version
+          mount | grep -E '/dev/shm' || true
+          ls -la /dev/shm/ || true
+
+      - name: Syntax check shell sources
+        run: |
+          set -e
+          for f in core.sh object.sh example.sh test/*.sh; do
+            echo "bash -n $f"
+            bash -n "$f"
+          done
+
+      - name: Run test suite
+        run: bash test/run.sh
